@@ -1,8 +1,12 @@
-package com.huake.msg.kafka.mode.impl;
+package com.huake.msg.kafka.callback.impl;
 
 
-import com.huake.msg.kafka.mode.RetryCallback;
+import cn.hutool.json.JSON;
+import cn.hutool.json.JSONUtil;
+import com.huake.msg.kafka.callback.RetryCallback;
+import com.huake.msg.kafka.mode.MessageModel;
 import com.huake.msg.kafka.utils.KafkaUtils;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,17 +25,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Order(100)
-public class ProducerDefaultRetryCallbackImpl<Res> implements RetryCallback<ProducerRecord<?, ?>, Res> {
-	private final static Logger LOGGER = LoggerFactory.getLogger(ProducerDefaultRetryCallbackImpl.class);
-
-	// 按 topic
-	private final Map<String, Map<String, FileWriter>> msgMap = new ConcurrentHashMap(60);
+public class DefaultRetryCallbackImpl<Res> implements RetryCallback<ProducerRecord,Res> {
+	private final static Logger LOGGER = LoggerFactory.getLogger(DefaultRetryCallbackImpl.class);
 
 	// 初始化队列大小默认10
 	private Integer queueSize = 10;
+	// 按 topic
+	private final Map<String, Map<String, FileWriter>> msgMap = new ConcurrentHashMap(60);
 
 	// 用于存储发送失败的消息
-	private BlockingQueue<ProducerRecord<?, ?>> queue;
+	private Map<String,BlockingQueue<ProducerRecord<?, ?>>> queueMap =new ConcurrentHashMap<>(60);
 
 	// 队列初始化开关
 	private static final AtomicBoolean newQuequeSwitch = new AtomicBoolean(false);
@@ -39,29 +42,38 @@ public class ProducerDefaultRetryCallbackImpl<Res> implements RetryCallback<Prod
 	private final ReentrantLock lock = new ReentrantLock();
 
 	@Override
-	public Res send(ProducerRecord<?, ?> producerRecord) throws ExecutionException {
-
-		KafkaUtils.send(producerRecord.value(), null, null);
+	public Res send(ProducerRecord producerRecord) throws ExecutionException {
+		//KafkaProducer kafkaProducer = KafkaUtils.buildKafkaProducer(null);
+		//kafkaProducer.send(producerRecord,new ProducerAckCallback(System.currentTimeMillis(), producerRecord));
+		KafkaUtils.send(producerRecord.value(),null,null);
 		return null;
 	}
 
 	@Override
-	public <T> T faild(ProducerRecord<?, ?> producerRecord) {
+	public <T> T failed(ProducerRecord producerRecord) {
 		save(producerRecord, KafkaUtils.getConfig().getChannels().get(0).getChannelId());
 		return null;
 	}
 
 	public void save(ProducerRecord<?, ?> record, String channelId) {
+		lock.lock();
 		if (!newQuequeSwitch.get()) {
-			queue = new ArrayBlockingQueue<>(queueSize);
 			newQuequeSwitch.getAndSet(true);
+			Integer consumerQueueSize = KafkaUtils.channelSelecter(channelId).getProducerChannel().getQueueSize();
+			this.queueSize =consumerQueueSize<1? this.queueSize : consumerQueueSize;
+			BlockingQueue<ProducerRecord<?, ?>> producerRecords = Optional.ofNullable(queueMap.get(channelId)).orElseGet(() -> {
+				ArrayBlockingQueue<ProducerRecord<?, ?>> channelQueue = new ArrayBlockingQueue<>(this.queueSize);
+				queueMap.put(channelId,channelQueue);
+				return channelQueue;
+			});
 		}
-		if (!queue.offer(record)) {
-			queue.stream().parallel().forEach(recordItem -> {
+		lock.unlock();
+		if (!queueMap.get(channelId).offer(record)) {
+			queueMap.get(channelId).stream().parallel().forEach(recordItem -> {
 				write(record, channelId);
 			});
-			queue.clear();
-			queue.offer(record);
+			queueMap.get(channelId).clear();
+			queueMap.get(channelId).offer(record);
 		}
 
 	}
@@ -69,22 +81,29 @@ public class ProducerDefaultRetryCallbackImpl<Res> implements RetryCallback<Prod
 	public void write(ProducerRecord<?, ?> record, String channelId) {
 
 		final Map<String, FileWriter> writer = Optional.ofNullable(msgMap.get(channelId))
-				.orElseGet(() -> writer(channelId, record.topic()));
+				.orElseGet(() -> createWriter(channelId, record.topic()));
 		try {
+			//写失败消息到本地文件
 			writer.get(channelId).write(record.value() + "\n");
 		} catch (IOException e1) {
 			throw new RuntimeException(e1);
 		}
 		msgMap.get(channelId).values().forEach(t -> {
 			try {
-				t.close();
+				t.flush();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		});
 	}
 
-	private Map<String, FileWriter> writer(String channelId, String topic) {
+	/**
+	 * 创建不同渠道下以topic区分的FileWriter的map集合
+	 * @param channelId 渠道id
+	 * @param topic  主题
+	 * @return
+	 */
+	private Map<String, FileWriter> createWriter(String channelId, String topic) {
 		// 基础文件路径
 		String basdir = KafkaUtils.channelSelecter(channelId).getProducerChannel().getMsgFailPath();
 		// 渠道路径

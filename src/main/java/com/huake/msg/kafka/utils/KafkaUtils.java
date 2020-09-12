@@ -1,19 +1,22 @@
 package com.huake.msg.kafka.utils;
 
-import com.huake.msg.kafka.ReceiveMessageCallBack;
+import cn.hutool.json.JSON;
+import cn.hutool.json.JSONUtil;
+import com.huake.msg.kafka.callback.ReceiveMessageCallBack;
+import com.huake.msg.kafka.callback.RetryCallback;
+import com.huake.msg.kafka.callback.impl.ProducerAckCallback;
 import com.huake.msg.kafka.conf.ChannelDefinition;
 import com.huake.msg.kafka.conf.ChannelDefinitionConfig;
 import com.huake.msg.kafka.conf.KafkaConsumerProperties;
 import com.huake.msg.kafka.conf.KafkaProducerProperties;
-import com.huake.msg.kafka.mode.RetryCallback;
-import com.huake.msg.kafka.mode.RetryMode;
+import com.huake.msg.kafka.mode.MessageModel;
+import com.huake.msg.kafka.mode.RetryModel;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +86,7 @@ public class KafkaUtils {
 		return properties;
 	}
 
-	public static <T> void send(int retry, RetryMode mode, String topic, T msg) {
+	public static <T extends MessageModel> void send(int retry, RetryModel mode, String topic, T msg) {
 		ProducerRecord<?, ?> record = null;
 		if (topic != null && !"".equals(topic)) {
 			record = new ProducerRecord(topic, msg);
@@ -106,14 +109,15 @@ public class KafkaUtils {
 		configIsNull(config);
 		KafkaProducer<K, T> kafkaProducer = buildKafkaProducer(channelId);
 		ProducerRecord<K, T> record = null;
+		String jsonStr = JSONUtil.toJsonStr(msg);
 		if (topic != null && !"".equals(topic)) {
-			record = new ProducerRecord(topic, msg);
+			record = new ProducerRecord(topic, jsonStr);
 		} else {
-			record = new ProducerRecord(channelSelecter(channelId).getProducerChannel().getTopic(), msg);
+			record = new ProducerRecord(channelSelecter(channelId).getProducerChannel().getTopic(), jsonStr);
 		}
 
 		try {
-			sendMsg(msg, kafkaProducer, record, channelId);
+			sendMsg(kafkaProducer, record, channelId);
 		} catch (Exception e) {
 			String msgFailPath = channelSelecter(channelId).getProducerChannel().getMsgFailPath();
 
@@ -127,22 +131,21 @@ public class KafkaUtils {
 	 * 
 	 * @param <T>
 	 * @param <K>
-	 * @param msg
 	 * @param kafkaProducer
 	 * @param record
 	 * @throws ExecutionException
 	 */
-	private static <T, K> void sendMsg(T msg, KafkaProducer<K, T> kafkaProducer, ProducerRecord<K, T> record,
+	private static <T, K> void sendMsg(KafkaProducer<K, T> kafkaProducer, ProducerRecord<K, T> record,
 			String channleId) throws ExecutionException {
 		configIsNull(config);
 		KafkaProducerProperties producerProperties = channelSelecter(channleId).getProducerChannel();
 		if (producerProperties.isAsync()) {
-			kafkaProducer.send(record, new ProducerAckCallback(System.currentTimeMillis(), msg));
+			kafkaProducer.send(record, new ProducerAckCallback(System.currentTimeMillis(), record));
 		} else {
 			try {
 				/** 同步等待返回 */
 				kafkaProducer.send(record).get();
-				BOOT_LOGGER.debug("Send msg:{%s}", msg);
+				BOOT_LOGGER.debug("Send msg:{%s}", record.value());
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -273,30 +276,4 @@ public class KafkaUtils {
 		return channelDefinition;
 	}
 
-	/**
-	 * 应答式消息提供者消息发生回调函数，发生成功后回调应答消息 ack开关为true时自动调用
-	 * 
-	 * @author huake
-	 *
-	 * @param <T>
-	 */
-	static class ProducerAckCallback<T> implements org.apache.kafka.clients.producer.Callback {
-
-		private final Long startTime;
-		private final T value;
-
-		public ProducerAckCallback(Long startTime, T value) {
-			this.startTime = startTime;
-			this.value = value;
-		}
-
-		@Override
-		public void onCompletion(RecordMetadata metadata, Exception exception) {
-			long spendTime = System.currentTimeMillis() - startTime;
-			if (null != metadata) {
-				BOOT_LOGGER.debug("消息({%s})send to partition({%s}) and offest {%s} and spend  {%s} ms", value,
-						metadata.partition(), metadata.offset(), spendTime);
-			}
-		}
-	}
 }

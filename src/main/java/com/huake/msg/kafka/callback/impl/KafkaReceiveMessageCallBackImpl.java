@@ -1,6 +1,6 @@
-package com.huake.msg.kafka.impl;
+package com.huake.msg.kafka.callback.impl;
 
-import com.huake.msg.kafka.ReceiveMessageCallBack;
+import com.huake.msg.kafka.callback.ReceiveMessageCallBack;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

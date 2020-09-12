@@ -3,16 +3,21 @@ package com.huake.msg.kafka.conf;
 import lombok.Data;
 import lombok.ToString;
 
+/**
+ * kafka 生产端配置信息
+ * @author zuokejin
+ * @date
+ */
 @Data
 @ToString
 public class KafkaProducerProperties {
-
-	private String topic;// 定义主题
-
+	// 定义主题
+	private String topic;
+	//kafka服务器端地址:端口
 	private String bootstrapServers;
-
+	//
 	private String batchSize = "16384";
-
+	//
 	private String lingerMs = "0";
 
 	private String compressionType = "none";
@@ -29,5 +34,9 @@ public class KafkaProducerProperties {
 
 	private String valueSerializer = "org.apache.kafka.common.serialization.StringSerializer";
 
+	// 失败消息暂存目录
 	private String msgFailPath;
+
+	//暂存发送失败消息的队列大小
+	private Integer queueSize = 3;
 }

@@ -1,19 +1,25 @@
 import cn.hutool.json.JSONUtil;
+import com.huake.msg.kafka.Application;
 import com.huake.msg.kafka.AsyncMsgManager;
-import com.huake.msg.kafka.Message;
-import com.huake.msg.kafka.mode.RetryCallback;
-import com.huake.msg.kafka.mode.impl.BackOffAlgorithmRetryModeImpl;
+import com.huake.msg.kafka.mode.MessageModel;
+import com.huake.msg.kafka.callback.RetryCallback;
+import com.huake.msg.kafka.mode.impl.BackOffModelImpl;
+import com.huake.msg.kafka.mode.impl.DefaultMessageModel;
 import com.huake.msg.kafka.utils.KafkaUtils;
 import com.huake.msg.kafka.utils.RetryUtil;
 import com.huake.msg.kafka.utils.SpringFactoriesUtils;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = Application.class)
 public class kafkaTest {
 	@Test
 	public void test() {
@@ -30,8 +36,8 @@ public class kafkaTest {
 	@Test
 	public void testMessageString() {
 		try {
-			List<Message> msgList = new ArrayList<>();
-			Message msg = new Message();
+			List<MessageModel> msgList = new ArrayList<>();
+			DefaultMessageModel msg = new DefaultMessageModel();
 			Map<String, Object> headerMap = new HashMap<>();
 			Map<String, Object> bodyMap = new HashMap<>();
 			Map<String, Object> oj = new HashMap<>();
@@ -49,7 +55,7 @@ public class kafkaTest {
 
 			msgList.add(msg);
 
-			Message msg2 = new Message();
+			DefaultMessageModel msg2 = new DefaultMessageModel();
 			Map<String, Object> headerMap2 = new HashMap<>();
 			Map<String, Object> oj2 = new HashMap<>();
 			Map<String, Object> resume2 = new HashMap<>();
@@ -81,8 +87,8 @@ public class kafkaTest {
 	@Test
 	public void testMessage() {
 		try {
-			List<Message> msgList = new ArrayList<>();
-			Message msg = new Message();
+			List<MessageModel> msgList = new ArrayList<>();
+			DefaultMessageModel msg = new DefaultMessageModel();
 			Map<String, Object> headerMap = new HashMap<>();
 			Map<String, Object> bodyMap = new HashMap<>();
 			Map<String, Object> oj = new HashMap<>();
@@ -100,7 +106,7 @@ public class kafkaTest {
 
 			msgList.add(msg);
 
-			Message msg2 = new Message();
+			DefaultMessageModel msg2 = new DefaultMessageModel();
 			Map<String, Object> headerMap2 = new HashMap<>();
 			Map<String, Object> oj2 = new HashMap<>();
 			Map<String, Object> resume2 = new HashMap<>();
@@ -130,8 +136,8 @@ public class kafkaTest {
 	public void testRetry() {
 		RetryCallback callback = SpringFactoriesUtils.loadFactories(RetryCallback.class);
 		try {
-			List<Message> msgList = new ArrayList<>();
-			Message msg = new Message();
+			List<MessageModel> msgList = new ArrayList<>();
+			DefaultMessageModel msg = new DefaultMessageModel();
 			Map<String, Object> headerMap = new HashMap<>();
 			Map<String, Object> bodyMap = new HashMap<>();
 			Map<String, Object> oj = new HashMap<>();
@@ -149,7 +155,7 @@ public class kafkaTest {
 
 			msgList.add(msg);
 
-			Message msg2 = new Message();
+			DefaultMessageModel msg2 = new DefaultMessageModel();
 			Map<String, Object> headerMap2 = new HashMap<>();
 			Map<String, Object> oj2 = new HashMap<>();
 			Map<String, Object> resume2 = new HashMap<>();
@@ -168,10 +174,10 @@ public class kafkaTest {
 			msg2.setHeaders(headerMap2);
 			msg2.setBody(bodyMap2);
 			msgList.add(msg2);
-			String jsonString = JSONUtil.parse(msgList).toJSONString(3).replace("\n", "").replace("\n", "");
-			ProducerRecord record = new ProducerRecord(KafkaUtils.channelSelecter(null).getProducerChannel().getTopic(),
-					jsonString);
-			RetryUtil.resend(2, new BackOffAlgorithmRetryModeImpl(), record, callback);
+			String jsonString = JSONUtil.parse(msg).toJSONString(3).replace("\n", "").replace("\n", "");
+			ProducerRecord record = new ProducerRecord(KafkaUtils.channelSelecter(null).getProducerChannel().getTopic(),jsonString);
+			Integer consumerQueueSize = KafkaUtils.channelSelecter(null).getProducerChannel().getQueueSize();
+			RetryUtil.resend(consumerQueueSize, new BackOffModelImpl(), record, callback);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

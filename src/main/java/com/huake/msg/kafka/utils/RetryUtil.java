@@ -1,7 +1,7 @@
 package com.huake.msg.kafka.utils;
 
-import com.huake.msg.kafka.mode.RetryCallback;
-import com.huake.msg.kafka.mode.RetryMode;
+import com.huake.msg.kafka.callback.RetryCallback;
+import com.huake.msg.kafka.mode.RetryModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,11 +13,12 @@ public class RetryUtil {
 
 	/**
 	 * 采用退避算法重传
-	 * 
+	 *
 	 * @param retry
 	 */
-	public static <Req, Res> Res resend(int retry, RetryMode mode, Req request, RetryCallback<Req, Res> callback) {
+	public static <Req, Res> Res resend(int retry, RetryModel mode, Req request, RetryCallback<Req, Res> callback) {
 		Res res = null;
+		retry = retry >= 0 ? retry : 0;
 		while (retry > currentTime.get()) {
 			try {
 				currentTime.getAndAdd(1);
@@ -28,11 +29,11 @@ public class RetryUtil {
 				} catch (InterruptedException ie) {
 					ie.printStackTrace();
 				}
-				LOGGER.info("发送请求时发生异常[{}]，准备第{}次重试,  ", e.getMessage(), currentTime.get());
+				LOGGER.info("发送请求时发生异常[{}]，准备第{}次重试,  ", e, currentTime.get());
 			}
 		}
 		LOGGER.info("请求未完成，执行任务失败");
-		callback.faild(request);
+		callback.failed(request);
 		return res;
 	}
 }

@@ -1,5 +1,6 @@
 package com.huake.msg.kafka.conf;
 
+import com.huake.msg.kafka.utils.KafkaUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,8 @@ public class KafkaConfig {
 	@Bean
 	@ConfigurationProperties(prefix = "spring.boot.kafka.cfg", ignoreUnknownFields = true)
 	public ChannelDefinitionConfig setChannelDefinitionConfig() {
-		return new ChannelDefinitionConfig();
+		ChannelDefinitionConfig channelDefinitionConfig = new ChannelDefinitionConfig();
+		KafkaUtils.setConfig(channelDefinitionConfig);
+		return channelDefinitionConfig;
 	}
 }

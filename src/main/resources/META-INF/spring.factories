@@ -1,8 +1,8 @@
-cn.sunline.ltts.msg.ReceiveMessageCallBack=\
-cn.sunline.ltts.msg.impl.KafkaReceiveMessageCallBackImpl
+com.huake.msg.kafka.callback.ReceiveMessageCallBack=\
+com.huake.msg.kafka.callback.impl.KafkaReceiveMessageCallBackImpl
 
-cn.sunline.ltts.msg.SendMessageCallBack=\
-cn.sunline.ltts.msg.impl.KafkaSendMessageCallBackImpl
+com.huake.msg.kafka.callback.SendMessageCallBack=\
+com.huake.msg.kafka.callback.impl.KafkaSendMessageCallBackImpl
 
-cn.sunline.ltts.msg.mode.Callback=\
-cn.sunline.ltts.msg.mode.ProducerDefaultCallBackImpl
+com.huake.msg.kafka.callback.RetryCallback=\
+com.huake.msg.kafka.callback.impl.DefaultRetryCallbackImpl

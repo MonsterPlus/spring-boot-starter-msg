@@ -1,6 +1,8 @@
 package com.huake.msg.kafka.utils;
 
+import com.huake.msg.kafka.callback.impl.ProducerAckCallback;
 import com.huake.msg.kafka.conf.KafkaProducerProperties;
+import com.huake.msg.kafka.mode.MessageModel;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
@@ -57,7 +59,7 @@ public class ProducerCallback {
 	public <T, K> void send(T msg, KafkaProducer<K, T> kafkaProducer, ProducerRecord<K, T> record, String channleId) {
 		KafkaProducerProperties producerProperties = new KafkaProducerProperties();
 		if (producerProperties.isAsync()) {
-			kafkaProducer.send(record, new KafkaUtils.ProducerAckCallback(System.currentTimeMillis(), msg));
+			kafkaProducer.send(record, new ProducerAckCallback(System.currentTimeMillis(), record));
 		} else {
 			try {
 				/** 同步等待返回 */

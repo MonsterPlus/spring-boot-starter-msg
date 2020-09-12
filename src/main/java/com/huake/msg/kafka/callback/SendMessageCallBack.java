@@ -1,4 +1,4 @@
-package com.huake.msg.kafka;
+package com.huake.msg.kafka.callback;
 
 
 public interface SendMessageCallBack<T> {

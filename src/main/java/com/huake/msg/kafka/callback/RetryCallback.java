@@ -1,4 +1,6 @@
-package com.huake.msg.kafka.mode;
+package com.huake.msg.kafka.callback;
+
+import com.huake.msg.kafka.mode.MessageModel;
 
 import java.util.concurrent.ExecutionException;
 
@@ -7,7 +9,7 @@ import java.util.concurrent.ExecutionException;
  * 
  * @author zuokejin
  *
- * @param <Req>
+ * @param <Req extends MessageModel>
  * @param <Res>
  */
 public interface RetryCallback<Req, Res> {
@@ -23,9 +25,8 @@ public interface RetryCallback<Req, Res> {
 	/**
 	 * 发送失败时回调
 	 * 
-	 * @param <T>
 	 * @param request
 	 * @return
 	 */
-	public <T> T faild(Req request);
+	public <T> T failed(Req request);
 }

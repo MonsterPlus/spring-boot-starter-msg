@@ -1,5 +1,6 @@
 package com.huake.msg.kafka;
 
+import com.huake.msg.kafka.callback.SendMessageCallBack;
 import com.huake.msg.kafka.utils.SpringFactoriesUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

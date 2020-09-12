@@ -1,10 +1,10 @@
 package com.huake.msg.kafka.mode.impl;
 
-import com.huake.msg.kafka.mode.RetryMode;
+import com.huake.msg.kafka.mode.RetryModel;
 
 import java.util.Random;
 
-public class BackOffAlgorithmRetryModeImpl implements RetryMode<Integer> {
+public class BackOffModelImpl implements RetryModel<Integer> {
 	static final double CONTENTION_PERIOD = 51.20;
 	static Integer RETRY = 10;
 
