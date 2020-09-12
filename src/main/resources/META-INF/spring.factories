@@ -1,0 +1,8 @@
+cn.sunline.ltts.msg.ReceiveMessageCallBack=\
+cn.sunline.ltts.msg.impl.KafkaReceiveMessageCallBackImpl
+
+cn.sunline.ltts.msg.SendMessageCallBack=\
+cn.sunline.ltts.msg.impl.KafkaSendMessageCallBackImpl
+
+cn.sunline.ltts.msg.mode.Callback=\
+cn.sunline.ltts.msg.mode.ProducerDefaultCallBackImpl
