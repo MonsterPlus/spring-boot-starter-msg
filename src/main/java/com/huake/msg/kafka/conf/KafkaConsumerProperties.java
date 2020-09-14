@@ -3,15 +3,23 @@ package com.huake.msg.kafka.conf;
 import lombok.Data;
 import lombok.ToString;
 
+/**
+ * kafka 消息消费方配置信息
+ * @Author zkj_95@163.com
+ */
 @Data
 @ToString
 public class KafkaConsumerProperties {
-
-	private String topics;// 定义主题
+	/**
+	 * 定义主题
+	 */
+	private String topics;
 
 	private String bootstrapServers;
-
-	private Long pollMs = 10000L; // 轮询间隔
+	/**
+	 *  轮询间隔
+	 */
+	private Long pollMs = 10000L;
 
 	private String groupId;
 

@@ -4,11 +4,11 @@ import com.huake.msg.kafka.mode.MessageModel;
 import lombok.Data;
 import lombok.ToString;
 
-import java.io.Serializable;
 import java.util.Map;
 
 /**
  * 消息模型，可自由扩展
+ * @author zuokejin
  */
 @Data
 @ToString

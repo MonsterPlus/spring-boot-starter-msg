@@ -1,8 +1,11 @@
 com.huake.msg.kafka.callback.ReceiveMessageCallBack=\
 com.huake.msg.kafka.callback.impl.KafkaReceiveMessageCallBackImpl
 
-com.huake.msg.kafka.callback.SendMessageCallBack=\
-com.huake.msg.kafka.callback.impl.KafkaSendMessageCallBackImpl
-
 com.huake.msg.kafka.callback.RetryCallback=\
 com.huake.msg.kafka.callback.impl.DefaultRetryCallbackImpl
+
+org.apache.kafka.clients.producer.Callback=\
+  com.huake.msg.kafka.callback.impl.ProducerAckCallback
+
+com.huake.msg.kafka.mode.RetryModel=\
+  com.huake.msg.kafka.mode.impl.BackOffModelImpl

@@ -7,6 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 重试机制工具类
+ * @Author zkj_95@163.com
+ */
 public class RetryUtil {
 	static final AtomicInteger currentTime = new AtomicInteger(0);
 	private final static Logger LOGGER = LoggerFactory.getLogger(RetryUtil.class);
