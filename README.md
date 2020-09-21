@@ -1,6 +1,6 @@
-#使用方式
+# 使用方式
 
-##一、依赖maven坐标
+## 一、依赖maven坐标
 ```xml
 <dependency>
     <groupId>com.huake.msg</groupId>
@@ -9,8 +9,8 @@
 </dependency>
 ``` 
 
-##二、在application文件中添加相关配置
-###示例：
+## 二、在application文件中添加相关配置
+### 示例：
 ```properties
 spring.boot.kafka.enabled=true
 spring.boot.kafka.cfg.channels[0].channelId=test
@@ -28,6 +28,6 @@ spring.boot.kafka.cfg.channels[0].producerChannel.msgFailPath=D:/msgFailPath
  
  [KafkaProducerProperties](https://github.com/MonsterPlus/spring-boot-starter-msg/blob/master/src/main/java/com/huake/msg/kafka/conf/KafkaProducerProperties.java)
  
- ##三、在应用中使用
+ ## 三、在应用中使用
  
  请参看KafkaUtils中提供的api
